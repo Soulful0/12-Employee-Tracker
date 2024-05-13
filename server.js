@@ -19,10 +19,10 @@ pool.connect((err, result) => {
   console.log("Successful connection made");
 });
 
-const client = await pool.connect();
+const client = pool.connect();
 
-await client.query("SELECT NOW()");
-client.release();
+// client.query("SELECT NOW()");
+// client.release();
 
 function mainMenu() {
   inquirer
@@ -80,7 +80,7 @@ function mainMenu() {
 // Function to add a new employee
 async function addEmployee() {
   try {
-    inquirer.prompt([
+    answers = await inquirer.prompt([
       { name: "firstName", type: "input", message: "Enter the first name:" },
       { name: "lastName", type: "input", message: "Enter the last name:" },
       { name: "roleId", type: "number", message: "Enter the role ID:" },
@@ -128,7 +128,7 @@ async function addEmployee() {
 // Function to update an employee's role
 async function updateEmployeeRole() {
   try {
-    inquirer.prompt([
+    answers = await inquirer.prompt([
       { name: "employeeId", type: "number", message: "Enter the employee ID:" },
       { name: "newRoleId", type: "number", message: "Enter the new role ID:" },
     ]);
@@ -164,7 +164,7 @@ async function updateEmployeeRole() {
 // Function to add a new department
 async function addDepartment() {
   try {
-    inquirer.prompt([
+    answers = await inquirer.prompt([
       {
         name: "departmentName",
         type: "input",
@@ -201,9 +201,10 @@ async function addDepartment() {
 }
 
 // Function to add a new role
-function addRole() {
-  inquirer
-    .prompt([
+async function addRole() {
+  try {
+    // Prompt user for role details
+    const answers = await inquirer.prompt([
       {
         name: "title",
         type: "input",
@@ -215,29 +216,44 @@ function addRole() {
         message: "What is the salary of the role?",
       },
       {
-        // select adddepartment answer
+        name: "departmentId",
+        type: "number",
+        message: "Enter the department ID:",
       },
-    ])
-    .then((answers) => {
-      console.log("Adding new role...");
-    });
+    ]);
+
+    // Connect to the database
+    const client = await pool.connect();
+
+    // SQL statement to insert a new role
+    const sql = `INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)`;
+
+    const values = [answers.title, answers.salary, answers.departmentId];
+
+    await client.query(sql, values);
+    console.log("Role added successfully.");
+  } catch (err) {
+    console.error("Error adding role:", err);
+  } finally {
+    client.release(); // Always release the client back to the pool
+  }
 }
 
 // Function to view all employees
 function viewAllEmployees() {
   console.log("Fetching all employees...");
 
- // Connect to the database
- const client = pool.connect();
+  // Connect to the database
+  const client = pool.connect();
 
   client.query("SELECT * FROM employees", (err, res) => {
     if (err) {
       console.error("Error fetching employees.", err);
-      client.release()
+      client.release();
       return;
     }
     console.log(JSON.stringify(res.rows, null, 2));
-    client.release()
+    client.release();
     return;
   });
 }
@@ -246,17 +262,17 @@ function viewAllEmployees() {
 function viewAllRoles() {
   console.log("Fetching all roles...");
 
- // Connect to the database
+  // Connect to the database
   const client = pool.connect();
 
   client.query("SELECT * FROM roles", (err, res) => {
     if (err) {
       console.error("Error fetching roles", err);
-      client.release()
+      client.release();
       return;
     }
     console.log(JSON.stringify(res.rows, null, 2));
-    client.release()
+    client.release();
     return;
   });
 }
@@ -265,19 +281,19 @@ function viewAllRoles() {
 function viewAllDepartments() {
   console.log("Fetching all departments...");
 
-   // Connect to the database
-   const client = pool.connect();
+  // Connect to the database
+  const client = pool.connect();
 
-   client.query("SELECT * FROM departments", (err, res) => {
+  client.query("SELECT * FROM departments", (err, res) => {
     if (err) {
-      console.error("Error fetching departments." err);
-      client.release()
+      console.error("Error fetching departments.", err);
+      client.release();
       return;
     }
     console.log(JSON.stringify(res.rows, null, 2));
-    client.release()
+    client.release();
     return;
-   })
+  });
 }
 
 // Function to handle quitting the application
@@ -286,13 +302,13 @@ async function quit() {
 
   try {
     await pool.end();
-    console.log("Database connections closed successfully.")
+    console.log("Database connections closed successfully.");
   } catch (err) {
-    console.error("Failed to close database connection.", err)
+    console.error("Failed to close database connection.", err);
   }
 
-// Ends connection to Node.js process
-  process.exit() 
+  // Ends connection to Node.js process
+  process.exit();
 }
 
 pool.connect();
