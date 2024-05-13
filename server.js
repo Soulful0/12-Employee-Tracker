@@ -77,11 +77,6 @@ function mainMenu() {
     });
 }
 
-// Function to view all employees
-function viewAllEmployees() {
-  console.log("Fetching all employees...");
-}
-
 // Function to add a new employee
 async function addEmployee() {
   try {
@@ -228,19 +223,76 @@ function addRole() {
     });
 }
 
+// Function to view all employees
+function viewAllEmployees() {
+  console.log("Fetching all employees...");
+
+ // Connect to the database
+ const client = pool.connect();
+
+  client.query("SELECT * FROM employees", (err, res) => {
+    if (err) {
+      console.error("Error fetching employees.", err);
+      client.release()
+      return;
+    }
+    console.log(JSON.stringify(res.rows, null, 2));
+    client.release()
+    return;
+  });
+}
+
 // Function to view all roles
 function viewAllRoles() {
   console.log("Fetching all roles...");
+
+ // Connect to the database
+  const client = pool.connect();
+
+  client.query("SELECT * FROM roles", (err, res) => {
+    if (err) {
+      console.error("Error fetching roles", err);
+      client.release()
+      return;
+    }
+    console.log(JSON.stringify(res.rows, null, 2));
+    client.release()
+    return;
+  });
 }
 
 // Function to view all departments
 function viewAllDepartments() {
   console.log("Fetching all departments...");
+
+   // Connect to the database
+   const client = pool.connect();
+
+   client.query("SELECT * FROM departments", (err, res) => {
+    if (err) {
+      console.error("Error fetching departments." err);
+      client.release()
+      return;
+    }
+    console.log(JSON.stringify(res.rows, null, 2));
+    client.release()
+    return;
+   })
 }
 
 // Function to handle quitting the application
-function quit() {
+async function quit() {
   console.log("Exiting application...");
+
+  try {
+    await pool.end();
+    console.log("Database connections closed successfully.")
+  } catch (err) {
+    console.error("Failed to close database connection.", err)
+  }
+
+// Ends connection to Node.js process
+  process.exit() 
 }
 
 pool.connect();
