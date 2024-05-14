@@ -1,4 +1,4 @@
-DROP DATABASE IF EXISTS employees;
+DROP DATABASE IF EXISTS employees_db;
 CREATE DATABASE employees_db;
 
 \c employees_db;
@@ -22,4 +22,5 @@ CREATE TABLE employees (
   last_name VARCHAR(30) NOT NULL,
   role_id INTEGER NOT NULL,
   manager_id INTEGER
+  FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL
 );

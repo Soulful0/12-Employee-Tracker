@@ -19,7 +19,9 @@ pool.connect((err, result) => {
   console.log("Successful connection made");
 });
 
-const client = pool.connect();
+async function connect() {
+  return await pool.connect();
+}
 
 // client.query("SELECT NOW()");
 // client.release();
@@ -93,13 +95,8 @@ async function addEmployee() {
 
     console.log("Adding new employee...");
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "There was an error adding new employees" });
+    console.log("There was an error adding new employees");
   }
-
-  // Connect to the database
-  const client = await pool.connect();
 
   try {
     // SQL statement
@@ -113,15 +110,18 @@ async function addEmployee() {
       answers.managerId || null,
     ];
 
+    client = await connect();
+
     // Running the query
     await client.query(sql, values);
 
-    res.status(200).json({ message: "Employee added successfully:" });
+    console.log("Employee added successfully:");
   } catch (err) {
     console.error("Error adding employee:", err);
   } finally {
     // Finally statement. Meaning that regardless, this will run.
     client.release();
+    mainMenu();
   }
 }
 
@@ -134,13 +134,8 @@ async function updateEmployeeRole() {
     ]);
     console.log("Updating employee role...");
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "There was an error updating the employee role" });
+    console.log("There was an error updating the employee role");
   }
-
-  // Connect to the database
-  const client = await pool.connect();
 
   try {
     // SQL statement
@@ -149,15 +144,18 @@ async function updateEmployeeRole() {
     // Taken from the user
     const values = [answers.newRoleId, answers.employeeId];
 
+    client = await connect();
+
     // Running the query
     await client.query(sql, values);
 
-    res.status(200).json({ message: "Employee role updated successfully:" });
+    console.log("Employee role updated successfully:");
   } catch (err) {
     console.error("Error updating employee role:", err);
   } finally {
     // Finally statement. Meaning that regardless, this will run.
     client.release();
+    mainMenu();
   }
 }
 
@@ -172,31 +170,29 @@ async function addDepartment() {
       },
     ]);
     console.log(`Added ${answer.departmentName} to the database.`);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ message: "There was an error adding the department" });
+  } catch (err) {
+    console.log("There was an error adding the department");
   }
-
-  // Connect to the database
-  const client = await pool.connect();
 
   try {
     // SQL statement
-    const sql = `INSERT INTO departments (name) VALUES $1`;
+    const sql = `INSERT INTO departments (name) VALUES ($1)`;
 
     // Taken from the user
     const values = [answers.departmentName];
 
+    client = await connect();
+
     // Running the query
     await client.query(sql, values);
 
-    res.status(200).json({ message: "Department added successfully:" });
+    console.log("Department added successfully:");
   } catch (err) {
     console.error("Error adding department:", err);
   } finally {
     // Finally statement. Meaning that regardless, this will run.
     client.release();
+    mainMenu();
   }
 }
 
@@ -222,13 +218,12 @@ async function addRole() {
       },
     ]);
 
-    // Connect to the database
-    const client = await pool.connect();
-
     // SQL statement to insert a new role
     const sql = `INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)`;
 
     const values = [answers.title, answers.salary, answers.departmentId];
+
+    client = await connect();
 
     await client.query(sql, values);
     console.log("Role added successfully.");
@@ -236,15 +231,15 @@ async function addRole() {
     console.error("Error adding role:", err);
   } finally {
     client.release(); // Always release the client back to the pool
+    mainMenu();
   }
 }
 
 // Function to view all employees
-function viewAllEmployees() {
+async function viewAllEmployees() {
   console.log("Fetching all employees...");
 
-  // Connect to the database
-  const client = pool.connect();
+  client = await connect();
 
   client.query("SELECT * FROM employees", (err, res) => {
     if (err) {
@@ -252,18 +247,17 @@ function viewAllEmployees() {
       client.release();
       return;
     }
-    console.log(JSON.stringify(res.rows, null, 2));
+    console.table(res.rows);
     client.release();
-    return;
+    mainMenu();
   });
 }
 
 // Function to view all roles
-function viewAllRoles() {
+async function viewAllRoles() {
   console.log("Fetching all roles...");
 
-  // Connect to the database
-  const client = pool.connect();
+  client = await connect();
 
   client.query("SELECT * FROM roles", (err, res) => {
     if (err) {
@@ -271,18 +265,17 @@ function viewAllRoles() {
       client.release();
       return;
     }
-    console.log(JSON.stringify(res.rows, null, 2));
+    console.table(res.rows);
     client.release();
-    return;
+    mainMenu();
   });
 }
 
 // Function to view all departments
-function viewAllDepartments() {
+async function viewAllDepartments() {
   console.log("Fetching all departments...");
 
-  // Connect to the database
-  const client = pool.connect();
+  client = await connect();
 
   client.query("SELECT * FROM departments", (err, res) => {
     if (err) {
@@ -290,9 +283,9 @@ function viewAllDepartments() {
       client.release();
       return;
     }
-    console.log(JSON.stringify(res.rows, null, 2));
+    console.table(res.rows);
     client.release();
-    return;
+    mainMenu();
   });
 }
 
